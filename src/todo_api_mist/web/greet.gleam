@@ -17,10 +17,17 @@ type GreetError {
 }
 
 pub fn greet(request: Request) -> Response {
+  let parse = fn(request) {
+    request
+    |> parse_name
+    |> build_person_dto
+  }
+
+  let workflow = application.greeting
+
   request
-  |> parse_name
-  |> build_person_dto
-  |> result.map(application.greeting)
+  |> parse
+  |> result.map(workflow)
   |> response
 }
 
