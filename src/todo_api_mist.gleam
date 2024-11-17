@@ -1,5 +1,19 @@
-import gleam/io
+import gleam/bytes_builder
+import gleam/erlang/process
+import gleam/http/response
+import mist
 
 pub fn main() {
-  io.println("Hello from todo_api_mist!")
+  let assert Ok(_) =
+    web_service
+    |> mist.new
+    |> mist.port(8080)
+    |> mist.start_http
+
+  process.sleep_forever()
+}
+
+fn web_service(_request) {
+  let body = bytes_builder.from_string("Hello, World!")
+  response.Response(200, [], mist.Bytes(body))
 }
