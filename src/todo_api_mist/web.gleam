@@ -1,8 +1,8 @@
-import gleam/bytes_builder
 import gleam/http/request.{type Request}
 import gleam/http/response.{type Response, Response}
 import gleam/list
-import mist
+import gleam/string_builder
+import wisp
 
 pub fn web_service(request: Request(_)) -> Response(_) {
   let name = parse_name(request)
@@ -23,6 +23,7 @@ fn parse_name(request: Request(_)) -> Result(String, Nil) {
 }
 
 fn response(name: String) -> Response(_) {
-  let body = bytes_builder.from_string("Hello, " <> name <> "!\n")
-  Response(200, [], mist.Bytes(body))
+  let body = string_builder.from_string("Hello, " <> name <> "!\n")
+
+  wisp.html_response(body, 200)
 }
