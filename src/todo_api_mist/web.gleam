@@ -4,26 +4,23 @@ import gleam/list
 import gleam/string_builder
 import wisp
 
-pub fn web_service(request: Request(_)) -> Response(_) {
-  let name = parse_name(request)
+pub fn middleware(
+  req: wisp.Request,
+  handle_request: fn(wisp.Request) -> wisp.Response,
+) -> wisp.Response {
+  // Permit browsers to simulate methods other than GET and POST using the
+  // `_method` query parameter.
+  let req = wisp.method_override(req)
 
-  case name {
-    Ok(name) -> response(name)
-    Error(_) -> response("World")
-  }
-}
+  // Log information about the request and response.
+  use <- wisp.log_request(req)
 
-fn parse_name(request: Request(_)) -> Result(String, Nil) {
-  let queries = request.get_query(request)
+  // Return a default 500 response if the request handler crashes.
+  use <- wisp.rescue_crashes
 
-  case queries {
-    Error(_) -> Error(Nil)
-    Ok(query_list) -> list.key_find(query_list, "name")
-  }
-}
+  // Rewrite HEAD requests to GET requests and return an empty body.
+  use req <- wisp.handle_head(req)
 
-fn response(name: String) -> Response(_) {
-  let body = string_builder.from_string("Hello, " <> name <> "!\n")
-
-  wisp.html_response(body, 200)
+  // Handle the request!
+  handle_request(req)
 }
