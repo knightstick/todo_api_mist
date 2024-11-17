@@ -13,7 +13,6 @@ type ParseError {
 
 type GreetError {
   QueryParseVariant
-  ValidationError(application.ValidationError)
 }
 
 pub fn greet(request: Request) -> Response {
@@ -49,16 +48,7 @@ fn build_person_dto(
   case result {
     Error(KeyMissing) -> Ok(None)
     Error(QueryParseError) -> Error(QueryParseVariant)
-    Ok(name) -> build_person_dto_from_name(name)
-  }
-}
-
-fn build_person_dto_from_name(
-  name: String,
-) -> Result(Option(application.PersonDto), GreetError) {
-  case application.build_person_dto(name) {
-    Ok(person) -> Ok(Some(person))
-    Error(err) -> Error(ValidationError(err))
+    Ok(name) -> Ok(Some(application.PersonDto(name: name)))
   }
 }
 
@@ -73,11 +63,6 @@ fn response(result: Result(String, GreetError)) -> Response {
       "Query Parse Error"
       |> string_builder.from_string
       |> wisp.html_response(400)
-    }
-    Error(ValidationError(_err)) -> {
-      "Validation Error"
-      |> string_builder.from_string
-      |> wisp.html_response(422)
     }
   }
 }
