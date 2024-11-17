@@ -5,6 +5,7 @@ pub opaque type PersonDto {
 }
 
 pub fn build_person_dto(name: String) -> Result(PersonDto, String) {
+  // TODO: validations
   Ok(Name(name))
 }
 
