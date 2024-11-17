@@ -6,32 +6,71 @@ import gleam/string_builder
 import todo_api_mist/greet as application
 import wisp.{type Request, type Response}
 
+type ParseError {
+  QueryParseError
+  KeyMissing
+}
+
+type GreetError {
+  QueryParseVariant
+  ValidationError(application.ValidationError)
+}
+
 pub fn greet(request: Request) -> Response {
   request
   |> parse_name
-  |> result.try(application.build_person_dto)
-  |> option.from_result
-  |> application.greeting
+  |> build_person_dto
+  |> result.map(application.greeting)
   |> response
 }
 
-fn parse_name(request: Request) -> Result(String, String) {
-  let queries = request.get_query(request)
+fn parse_name(request: Request) -> Result(String, ParseError) {
+  request.get_query(request)
+  |> result.map_error(fn(_) { QueryParseError })
+  |> result.try(find_name)
+}
 
-  let result = case queries {
-    Error(_) -> Error(Nil)
-    Ok(query_list) -> list.key_find(query_list, "name")
+fn find_name(query_list: List(#(String, String))) -> Result(String, ParseError) {
+  query_list
+  |> list.key_find("name")
+  |> result.map_error(fn(_) { KeyMissing })
+}
+
+fn build_person_dto(
+  result: Result(String, ParseError),
+) -> Result(Option(application.PersonDto), GreetError) {
+  case result {
+    Error(KeyMissing) -> Ok(None)
+    Error(QueryParseError) -> Error(QueryParseVariant)
+    Ok(name) -> build_person_dto_from_name(name)
   }
-
-  result |> result.map_error(fn(_) { "Failed to parse query" })
 }
 
-fn response(greeting: String) -> Response {
-  greeting
-  |> string_builder.from_string
-  |> wisp.html_response(200)
+fn build_person_dto_from_name(
+  name: String,
+) -> Result(Option(application.PersonDto), GreetError) {
+  case application.build_person_dto(name) {
+    Ok(person) -> Ok(Some(person))
+    Error(err) -> Error(ValidationError(err))
+  }
 }
 
-fn build_dto(name: String) -> Result(application.PersonDto, _) {
-  application.build_person_dto(name)
+fn response(result: Result(String, GreetError)) -> Response {
+  case result {
+    Ok(greeting) -> {
+      greeting
+      |> string_builder.from_string
+      |> wisp.html_response(200)
+    }
+    Error(QueryParseVariant) -> {
+      "Query Parse Error"
+      |> string_builder.from_string
+      |> wisp.html_response(400)
+    }
+    Error(ValidationError(_err)) -> {
+      "Validation Error"
+      |> string_builder.from_string
+      |> wisp.html_response(422)
+    }
+  }
 }

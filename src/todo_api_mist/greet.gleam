@@ -4,7 +4,11 @@ pub opaque type PersonDto {
   Name(String)
 }
 
-pub fn build_person_dto(name: String) -> Result(PersonDto, String) {
+pub type ValidationError {
+  ValidationError
+}
+
+pub fn build_person_dto(name: String) -> Result(PersonDto, ValidationError) {
   // TODO: validations
   Ok(Name(name))
 }
