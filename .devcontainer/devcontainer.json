@@ -1,0 +1,18 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/universal:2",
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/erlang-asdf:2": {},
+		"ghcr.io/devcontainers-extra/features/gleam:1": {
+			"version": "1.6.0-rc2"
+		},
+		"./features/rebar3": {}
+	},
+	"postAttachCommand": "asdf global erlang 27.1.2",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"gleam.gleam"
+			]
+		}
+	}
+}

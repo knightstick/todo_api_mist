@@ -1,0 +1,3 @@
+# codespace_stuff
+
+So I'm really into the idea of Codespaces and remote dev at the moment, but, also Gleam. I want to find the best way to start new projects in new languages, and am keen to keep trying different ways to get started - I should probably just build stuff, but, hey, this is fun not work hey...

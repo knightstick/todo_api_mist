@@ -1,0 +1,12 @@
+{
+  "id": "rebar3",
+  "version": "1.0.0",
+  "name": "rebar3",
+  "description": "Installs rebar3",
+  "dependsOn": {
+    "ghcr.io/devcontainers-contrib/features/erlang-asdf:2": {}
+  },
+  "install": {
+    "script": "install.sh"
+  }
+}
