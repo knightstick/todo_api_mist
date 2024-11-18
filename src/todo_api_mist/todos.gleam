@@ -10,7 +10,7 @@ pub type ListDto {
 }
 
 pub type CreateListError {
-  DomainError(domain.CreateListError)
+  DomainError
 }
 
 pub fn create_list(dto: CreateListDto) -> Result(ListDto, CreateListError) {
@@ -18,7 +18,7 @@ pub fn create_list(dto: CreateListDto) -> Result(ListDto, CreateListError) {
   |> create_list_dto_to_domain
   |> domain.create_list
   |> result.map(create_list_event_domain_to_dto)
-  |> result.map_error(DomainError)
+  |> result.map_error(fn(_) { DomainError })
 }
 
 fn create_list_dto_to_domain(dto: CreateListDto) -> domain.CreateList {

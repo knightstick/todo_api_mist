@@ -1,4 +1,6 @@
+import gleam/dynamic.{type Dynamic}
 import gleam/http.{Post}
+import gleam/json
 import gleam/result
 import gleam/string_builder
 import wisp.{type Request, type Response}
@@ -7,6 +9,11 @@ import todo_api_mist/todos as application
 
 pub type CreateListError {
   WorkflowError(application.CreateListError)
+  DecodeError
+}
+
+type CreateListParams {
+  CreateListParams(list: application.CreateListDto)
 }
 
 pub fn lists(req: Request) -> Response {
@@ -17,21 +24,36 @@ pub fn lists(req: Request) -> Response {
 }
 
 fn create_list(req: Request) -> Response {
-  req
+  use json <- wisp.require_json(req)
+
+  json
   |> parse
   |> result.try(workflow)
   |> response
 }
 
-fn parse(_req) -> Result(application.CreateListDto, _) {
-  // TODO parse the params from the request
-  "title"
-  |> build_dto
-  |> Ok
+fn parse(json: Dynamic) -> Result(application.CreateListDto, _) {
+  json
+  |> decode_create_list
+  |> result.map_error(fn(_) { DecodeError })
 }
 
-fn build_dto(title: String) -> application.CreateListDto {
-  application.CreateListDto(title: title)
+fn decode_create_list(
+  json,
+) -> Result(application.CreateListDto, dynamic.DecodeErrors) {
+  let inner_decoder =
+    dynamic.decode1(
+      application.CreateListDto,
+      dynamic.field("title", dynamic.string),
+    )
+
+  let decoder =
+    dynamic.decode1(CreateListParams, dynamic.field("list", inner_decoder))
+
+  case decoder(json) {
+    Ok(CreateListParams(list)) -> Ok(list)
+    Error(errors) -> Error(errors)
+  }
 }
 
 fn workflow(list_dto: application.CreateListDto) -> Result(_, _) {
@@ -45,18 +67,29 @@ fn response(res) -> Response {
     Ok(list_dto) -> {
       list_dto
       |> serialize
-      |> string_builder.from_string
       |> wisp.html_response(201)
     }
-    Error(_) -> {
+    Error(DecodeError) -> {
       "Bad Request"
       |> string_builder.from_string
       |> wisp.html_response(400)
+    }
+    Error(WorkflowError(application.DomainError)) -> {
+      "Unprocessable Entity"
+      |> string_builder.from_string
+      |> wisp.html_response(422)
     }
   }
 }
 
 fn serialize(dto: application.ListDto) {
-  // TODO: serialize json
-  dto.id <> " " <> dto.title
+  let object =
+    json.object([
+      #("id", json.string(dto.id)),
+      #("title", json.string(dto.title)),
+    ])
+
+  object
+  |> json.to_string_builder
+  |> string_builder.append("\n")
 }
