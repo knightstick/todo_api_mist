@@ -19,8 +19,8 @@ pub fn build_person(name: String) -> Result(Person, ValidationError) {
 
 pub fn greeting(opt: Option(Person)) -> String {
   case opt {
-    Some(Person(name: name)) -> "Hello, " <> name_to_string(name) <> "!"
-    None -> "Hello, World"
+    Some(Person(name: name)) -> "Hello, " <> name_to_string(name) <> "!\n"
+    None -> "Hello, World!\n"
   }
 }
 
