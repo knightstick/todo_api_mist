@@ -13,6 +13,7 @@ type ParseError {
 
 type GreetError {
   QueryParseVariant
+  WorkflowError(application.GreetingError)
 }
 
 pub fn greet(request: Request) -> Response {
@@ -27,6 +28,7 @@ pub fn greet(request: Request) -> Response {
   request
   |> parse
   |> result.map(workflow)
+  |> result.map_error(fn(error) { WorkflowError(error) })
   |> response
 }
 
@@ -63,6 +65,11 @@ fn response(result: Result(String, GreetError)) -> Response {
       "Query Parse Error"
       |> string_builder.from_string
       |> wisp.html_response(400)
+    }
+    Error(WorkflowError(_error)) -> {
+      "Workflow Error"
+      |> string_builder.from_string
+      |> wisp.html_response(422)
     }
   }
 }
