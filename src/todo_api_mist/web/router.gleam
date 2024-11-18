@@ -9,6 +9,7 @@ pub fn handle_request(req: Request) -> Response {
   case wisp.path_segments(req) {
     ["greet"] -> greet_web.greet(req)
     ["todos", "lists"] -> todos_web.lists(req)
+    ["todos", "lists", list_id, "todos"] -> todos_web.list_todos(req, list_id)
     _ -> wisp.not_found()
   }
 }
