@@ -1,7 +1,3 @@
-import gleam/http/request.{type Request}
-import gleam/http/response.{type Response, Response}
-import gleam/list
-import gleam/string_builder
 import wisp
 
 pub fn middleware(
