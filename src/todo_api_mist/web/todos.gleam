@@ -41,14 +41,17 @@ fn parse(json: Dynamic) -> Result(application.CreateListDto, _) {
 fn decode_create_list(
   json,
 ) -> Result(application.CreateListDto, dynamic.DecodeErrors) {
-  let inner_decoder =
-    dynamic.decode1(
-      application.CreateListDto,
-      dynamic.field("title", dynamic.string),
-    )
-
   let decoder =
-    dynamic.decode1(CreateListParams, dynamic.field("list", inner_decoder))
+    dynamic.decode1(
+      CreateListParams,
+      dynamic.field(
+        "list",
+        dynamic.decode1(
+          application.CreateListDto,
+          dynamic.field("title", dynamic.string),
+        ),
+      ),
+    )
 
   case decoder(json) {
     Ok(CreateListParams(list)) -> Ok(list)
